@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GastroPlace - Dashboard Admin</title>
+    
+    <!-- CDNs -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: #f3f4f6;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            box-shadow: 4px 0 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-link {
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        
+        .sidebar-link.active {
+            background: rgba(147, 51, 234, 0.2);
+            color: #a78bfa;
+            border-left: 3px solid #8b5cf6;
+            padding-left: 17px;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-item-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .menu-item-card:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+        }
+        
+        .tab-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: #6b7280;
+        }
+        
+        .tab-button.active {
+            background: #8b5cf6;
+            color: white;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #8b5cf6;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+        
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-preparando {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+        
+        .status-pronto {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-entregue {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        
+        .info-item {
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .day-schedule {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .day-schedule:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 flex-shrink-0">
+            <div class="p-6 h-full flex flex-col">
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-utensils text-purple-600"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-white">GastroPlace</h1>
+                    </div>
+                    
+                    <nav class="space-y-2">
+                        <a href="#" class="sidebar-link active" data-section="overview">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Visão Geral</span>
+                        </a>
+                        <a href="#" class="sidebar-link" data-section="orders">
+                            <i class="fas fa-shopping-bag w-5"></i>
+                            <span>Pedidos</span>
+                            <span id="pendingCount" class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0</span>
+                        </a>
+                        <a href="#" class="sidebar-link" data-section="menu">
+                            <i class="fas fa-book w-5"></i>
+                            <span>Cardápio</span>
+                        </a>
+                        <a href="#" class="sidebar-link" data-section="settings">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </nav>
+                </div>
+                
+                <div class="mt-auto space-y-4">
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <p class="text-sm text-gray-400">Status do Sistema</p>
+                        <div class="flex items-center mt-2">
+                            <span class="pulse-dot mr-2"></span>
+                            <span class="text-white font-medium">Online</span>
+                        </div>
+                    </div>
+                    
+                    <a href="/logout" class="sidebar-link text-red-400 hover:text-red-300">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span>Sair</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b sticky top-0 z-10">
+                <div class="px-8 py-4 flex items-center justify-between">
+                    <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Visão Geral</h2>
+                    <div class="flex items-center gap-4">
+                        <button onclick="refreshData()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200">
+                            <i class="fas fa-sync-alt mr-2"></i>Atualizar
+                        </button>
+                        <div class="text-sm text-gray-500">
+                            <i class="far fa-clock mr-1"></i>
+                            <span id="currentTime"></span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Sections -->
+            <div class="p-8">
+                <!-- Overview Section -->
+                <div id="overview" class="content-section active">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-shopping-cart text-purple-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-medium">
+                                    <i class="fas fa-arrow-up mr-1"></i>12%
+                                </span>
+                            </div>
+                            <h3 class="text-gray-500 text-sm font-medium">Total de Pedidos</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-1" id="totalOrders">0</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-medium">
+                                    <i class="fas fa-arrow-up mr-1"></i>8%
+                                </span>
+                            </div>
+                            <h3 class="text-gray-500 text-sm font-medium">Receita Total</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-1" id="totalRevenue">R$ 0,00</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-receipt text-blue-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-gray-500 text-sm font-medium">Ticket Médio</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-1" id="avgOrderValue">R$ 0,00</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-gray-500 text-sm font-medium">Pedidos Pendentes</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-1" id="pendingOrders">0</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Itens Mais Populares</h3>
+                            <div style="height: 300px;">
+                                <canvas id="popularItemsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Pedidos por Status</h3>
+                            <div style="height: 300px;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Orders Section -->
+                <div id="orders" class="content-section">
+                    <div class="content-card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Lista de Pedidos</h3>
+                            <div class="flex gap-2">
+                                <button class="status-filter active bg-gray-100 px-4 py-2 rounded-lg text-sm font-medium" data-status="all">
+                                    Todos
+                                </button>
+                                <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium" data-status="pendente">
+                                    Pendentes
+                                </button>
+                                <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium" data-status="preparando">
+                                    Preparando
+                                </button>
+                                <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium" data-status="pronto">
+                                    Prontos
+                                </button>
+                            </div>
+                        </div>
+                        <div id="ordersList" class="space-y-4">
+                            <!-- Orders will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Section -->
+                <div id="menu" class="content-section">
+                    <div class="content-card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Gestão do Cardápio</h3>
+                            <button onclick="openAddItemModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-plus mr-2"></i>Adicionar Item
+                            </button>
+                        </div>
+                        
+                        <!-- Category Tabs -->
+                        <div class="flex gap-2 mb-6 border-b">
+                            <button class="tab-button active" data-category="pratos_principais">
+                                Pratos Principais
+                            </button>
+                            <button class="tab-button" data-category="entradas">
+                                Entradas
+                            </button>
+                            <button class="tab-button" data-category="sobremesas">
+                                Sobremesas
+                            </button>
+                            <button class="tab-button" data-category="bebidas">
+                                Bebidas
+                            </button>
+                        </div>
+                        
+                        <div id="menuItems" class="space-y-3">
+                            <!-- Menu items will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Section -->
+                <div id="settings" class="content-section">
+                    <div class="space-y-6">
+                        <!-- Restaurant Info -->
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Informações Básicas</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Restaurante</label>
+                                    <input type="text" id="restaurantName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                                    <input type="text" id="restaurantPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                                    <input type="text" id="restaurantAddress" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Schedule -->
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Horário de Funcionamento</h3>
+                            <div class="space-y-2">
+                                <div class="day-schedule">
+                                    <span class="font-medium">Segunda</span>
+                                    <input type="text" id="schedule_segunda" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Terça</span>
+                                    <input type="text" id="schedule_terca" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Quarta</span>
+                                    <input type="text" id="schedule_quarta" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Quinta</span>
+                                    <input type="text" id="schedule_quinta" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Sexta</span>
+                                    <input type="text" id="schedule_sexta" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Sábado</span>
+                                    <input type="text" id="schedule_sabado" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="day-schedule">
+                                    <span class="font-medium">Domingo</span>
+                                    <input type="text" id="schedule_domingo" class="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery Settings -->
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Configurações de Delivery</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Taxa de Entrega</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="deliveryFee" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Pedido Mínimo</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-gray-500">R$</span>
+                                        <input type="number" step="0.01" id="minOrder" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tempo Mínimo (min)</label>
+                                    <input type="number" id="minTime" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tempo Máximo (min)</label>
+                                    <input type="number" id="maxTime" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Raio de Entrega (km)</label>
+                                    <input type="number" id="deliveryRadius" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div class="flex items-center">
+                                    <label class="text-sm font-medium text-gray-700 mr-3">Delivery Ativo</label>
+                                    <div class="toggle-switch" id="deliveryActive" onclick="toggleSwitch(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Methods -->
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Formas de Pagamento</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="payment_dinheiro" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                    <label for="payment_dinheiro" class="text-sm font-medium text-gray-700">Dinheiro</label>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="payment_pix" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                    <label for="payment_pix" class="text-sm font-medium text-gray-700">PIX</label>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="payment_cartao_credito" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                    <label for="payment_cartao_credito" class="text-sm font-medium text-gray-700">Cartão de Crédito</label>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="payment_cartao_debito" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                    <label for="payment_cartao_debito" class="text-sm font-medium text-gray-700">Cartão de Débito</label>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="payment_vale_refeicao" class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                                    <label for="payment_vale_refeicao" class="text-sm font-medium text-gray-700">Vale Refeição</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Social Media -->
+                        <div class="content-card">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Redes Sociais</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+                                    <input type="text" id="social_whatsapp" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
+                                    <input type="text" id="social_instagram" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                                    <input type="text" id="social_facebook" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="saveSettings()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200 flex items-center gap-2" id="saveSettingsBtn">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Todas as Configurações</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <!-- Add/Edit Item Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold" id="modalTitle">Adicionar Item</h3>
+                <button onclick="closeItemModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="itemForm" class="space-y-4">
+                <input type="hidden" id="itemId">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Item</label>
+                    <input type="text" id="itemName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Preço</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500">R$</span>
+                        <input type="number" step="0.01" id="itemPrice" required class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                    <textarea id="itemDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select id="itemCategory" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="pratos_principais">Pratos Principais</option>
+                        <option value="entradas">Entradas</option>
+                        <option value="sobremesas">Sobremesas</option>
+                        <option value="bebidas">Bebidas</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Item Ativo</label>
+                    <div class="toggle-switch active" id="itemActive" onclick="toggleSwitch(this)"></div>
+                </div>
+                
+                <div class="flex gap-2 pt-4">
+                    <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-200">
+                        <i class="fas fa-save mr-2"></i>Salvar
+                    </button>
+                    <button type="button" onclick="closeItemModal()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition duration-200">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Detalhes do Pedido</h3>
+                <button onclick="closeOrderModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="orderDetails">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let orders = [];
+        let analytics = {};
+        let menuData = {};
+        let restaurantData = {};
+        let currentCategory = 'pratos_principais';
+        let currentFilter = 'all';
+        
+        // Navigation
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.dataset.section;
+                if (section) {
+                    showSection(section);
+                    
+                    // Update active state
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    // Update page title
+                    const titles = {
+                        'overview': 'Visão Geral',
+                        'orders': 'Pedidos',
+                        'menu': 'Gestão do Cardápio',
+                        'settings': 'Configurações'
+                    };
+                    document.getElementById('pageTitle').textContent = titles[section] || section;
+                }
+            });
+        });
+        
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Load section-specific data
+            if (sectionId === 'menu') {
+                loadMenu();
+            } else if (sectionId === 'settings') {
+                loadSettings();
+            }
+        }
+        
+        // Category tabs
+        document.querySelectorAll('.tab-button').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentCategory = tab.dataset.category;
+                document.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderMenuItems();
+            });
+        });
+        
+        // Status filters
+        document.querySelectorAll('.status-filter').forEach(filter => {
+            filter.addEventListener('click', () => {
+                currentFilter = filter.dataset.status;
+                document.querySelectorAll('.status-filter').forEach(f => {
+                    f.classList.remove('active', 'bg-gray-100');
+                });
+                filter.classList.add('active', 'bg-gray-100');
+                renderOrders();
+            });
+        });
+        
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString('pt-BR');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Load data
+        async function loadData() {
+            try {
+                // Load orders
+                const ordersResponse = await fetch('/api/orders');
+                orders = await ordersResponse.json();
+                
+                // Load analytics
+                const analyticsResponse = await fetch('/api/analytics');
+                analytics = await analyticsResponse.json();
+                
+                updateUI();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+        
+        // Update UI
+        function updateUI() {
+            // Update stats
+            document.getElementById('totalOrders').textContent = analytics.total_orders || 0;
+            document.getElementById('totalRevenue').textContent = `R$ ${(analytics.total_revenue || 0).toFixed(2)}`;
+            document.getElementById('avgOrderValue').textContent = `R$ ${(analytics.average_order_value || 0).toFixed(2)}`;
+            document.getElementById('pendingOrders').textContent = analytics.orders_by_status?.pendente || 0;
+            
+            // Update pending count badge
+            const pendingCount = analytics.orders_by_status?.pendente || 0;
+            const pendingBadge = document.getElementById('pendingCount');
+            if (pendingCount > 0) {
+                pendingBadge.textContent = pendingCount;
+                pendingBadge.classList.remove('hidden');
+            } else {
+                pendingBadge.classList.add('hidden');
+            }
+            
+            // Update charts
+            updateCharts();
+            
+            // Update orders list
+            renderOrders();
+        }
+        
+        // Update charts
+        function updateCharts() {
+            // Popular items chart
+            const popularCtx = document.getElementById('popularItemsChart').getContext('2d');
+            const popularItems = analytics.popular_items || [];
+            
+            if (window.popularChart) {
+                window.popularChart.destroy();
+            }
+            
+            window.popularChart = new Chart(popularCtx, {
+                type: 'bar',
+                data: {
+                    labels: popularItems.map(item => item[0]),
+                    datasets: [{
+                        label: 'Quantidade Vendida',
+                        data: popularItems.map(item => item[1]),
+                        backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 0,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Status chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const statusData = analytics.orders_by_status || {};
+            
+            if (window.statusChart) {
+                window.statusChart.destroy();
+            }
+            
+            window.statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pendente', 'Preparando', 'Pronto', 'Entregue'],
+                    datasets: [{
+                        data: [
+                            statusData.pendente || 0,
+                            statusData.preparando || 0,
+                            statusData.pronto || 0,
+                            statusData.entregue || 0
+                        ],
+                        backgroundColor: [
+                            '#fbbf24',
+                            '#60a5fa',
+                            '#34d399',
+                            '#9ca3af'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Render orders
+        function renderOrders() {
+            const ordersList = document.getElementById('ordersList');
+            let filteredOrders = orders;
+            
+            if (currentFilter !== 'all') {
+                filteredOrders = orders.filter(order => order.status === currentFilter);
+            }
+            
+            if (filteredOrders.length === 0) {
+                ordersList.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum pedido encontrado</p>';
+                return;
+            }
+            
+            ordersList.innerHTML = filteredOrders.slice().reverse().map(order => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors cursor-pointer" onclick="showOrderDetails('${order.id}')">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="font-semibold text-gray-800">#${order.id}</p>
+                            <p class="text-sm text-gray-500">${new Date(order.timestamp).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <span class="status-badge status-${order.status}">${order.status}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Cliente</p>
+                            <p class="font-medium">${order.cliente}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Tipo</p>
+                            <p class="font-medium">${order.tipo_entrega === 'delivery' ? 'Entrega' : 'Retirada'}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Total</p>
+                            <p class="font-medium">R$ ${order.total.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        ${order.status === 'pendente' ? `
+                            <button onclick="updateOrderStatus(event, '${order.id}', 'preparando')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                                <i class="fas fa-fire mr-1"></i>Preparar
+                            </button>
+                        ` : ''}
+                        ${order.status === 'preparando' ? `
+                            <button onclick="updateOrderStatus(event, '${order.id}', 'pronto')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                                <i class="fas fa-check mr-1"></i>Pronto
+                            </button>
+                        ` : ''}
+                        ${order.status === 'pronto' ? `
+                            <button onclick="updateOrderStatus(event, '${order.id}', 'entregue')" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+                                <i class="fas fa-truck mr-1"></i>Entregue
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load menu
+        async function loadMenu() {
+            try {
+                const response = await fetch('/api/menu');
+                menuData = await response.json();
+                renderMenuItems();
+            } catch (error) {
+                console.error('Error loading menu:', error);
+            }
+        }
+        
+        // Render menu items
+        function renderMenuItems() {
+            const menuItemsDiv = document.getElementById('menuItems');
+            const items = menuData[currentCategory] || [];
+            
+            if (items.length === 0) {
+                menuItemsDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum item nesta categoria</p>';
+                return;
+            }
+            
+            menuItemsDiv.innerHTML = items.map(item => `
+                <div class="menu-item-card">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <h4 class="font-semibold text-gray-800">${item.nome}</h4>
+                                <span class="text-purple-600 font-medium">R$ ${item.preco.toFixed(2)}</span>
+                                ${!item.ativo ? '<span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">Inativo</span>' : ''}
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">${item.descricao}</p>
+                        </div>
+                        <div class="flex items-center gap-2 ml-4">
+                            <button onclick="editItem(${item.id})" class="text-blue-500 hover:text-blue-700 p-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 p-2">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <div class="toggle-switch ${item.ativo ? 'active' : ''} ml-2" onclick="toggleItemStatus(${item.id}, this)"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Toggle item status
+        async function toggleItemStatus(itemId, element) {
+            const isActive = element.classList.contains('active');
+            
+            try {
+                const response = await fetch(`/api/menu/item/${itemId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ativo: !isActive }),
+                });
+                
+                if (response.ok) {
+                    element.classList.toggle('active');
+                    showNotification('Status do item atualizado!');
+                    loadMenu();
+                }
+            } catch (error) {
+                console.error('Error updating item status:', error);
+                showNotification('Erro ao atualizar status', 'error');
+            }
+        }
+        
+        // Open add item modal
+        function openAddItemModal() {
+            document.getElementById('modalTitle').textContent = 'Adicionar Item';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemId').value = '';
+            document.getElementById('itemCategory').value = currentCategory;
+            document.getElementById('itemActive').classList.add('active');
+            document.getElementById('itemModal').classList.add('active');
+        }
+        
+        // Edit item
+        async function editItem(itemId) {
+            // Find item in menuData
+            let itemToEdit = null;
+            for (const [category, items] of Object.entries(menuData)) {
+                const found = items.find(item => item.id === itemId);
+                if (found) {
+                    itemToEdit = found;
+                    break;
+                }
+            }
+            
+            if (!itemToEdit) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Item';
+            document.getElementById('itemId').value = itemToEdit.id;
+            document.getElementById('itemName').value = itemToEdit.nome;
+            document.getElementById('itemPrice').value = itemToEdit.preco;
+            document.getElementById('itemDescription').value = itemToEdit.descricao;
+            document.getElementById('itemCategory').value = itemToEdit.categoria;
+            
+            const toggleSwitch = document.getElementById('itemActive');
+            if (itemToEdit.ativo) {
+                toggleSwitch.classList.add('active');
+            } else {
+                toggleSwitch.classList.remove('active');
+            }
+            
+            document.getElementById('itemModal').classList.add('active');
+        }
+        
+        // Delete item
+        async function deleteItem(itemId) {
+            if (!confirm('Tem certeza que deseja excluir este item?')) return;
+            
+            try {
+                const response = await fetch(`/api/menu/item/${itemId}`, {
+                    method: 'DELETE',
+                });
+                
+                if (response.ok) {
+                    showNotification('Item excluído com sucesso!');
+                    loadMenu();
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                showNotification('Erro ao excluir item', 'error');
+            }
+        }
+        
+        // Close item modal
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.remove('active');
+        }
+        
+        // Item form submit
+        document.getElementById('itemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const itemId = document.getElementById('itemId').value;
+            const isActive = document.getElementById('itemActive').classList.contains('active');
+            
+            const itemData = {
+                nome: document.getElementById('itemName').value,
+                preco: parseFloat(document.getElementById('itemPrice').value),
+                descricao: document.getElementById('itemDescription').value,
+                categoria: document.getElementById('itemCategory').value,
+                ativo: isActive
+            };
+            
+            try {
+                let response;
+                if (itemId) {
+                    // Edit existing item
+                    response = await fetch(`/api/menu/item/${itemId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(itemData),
+                    });
+                } else {
+                    // Add new item
+                    response = await fetch('/api/menu/item', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(itemData),
+                    });
+                }
+                
+                if (response.ok) {
+                    showNotification(itemId ? 'Item atualizado!' : 'Item adicionado!');
+                    closeItemModal();
+                    loadMenu();
+                }
+            } catch (error) {
+                console.error('Error saving item:', error);
+                showNotification('Erro ao salvar item', 'error');
+            }
+        });
+        
+        // Load settings with enhanced error handling
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/restaurant');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                restaurantData = await response.json();
+                console.log('📋 Configurações carregadas:', restaurantData);
+                
+                // Basic info
+                document.getElementById('restaurantName').value = restaurantData.nome || '';
+                document.getElementById('restaurantPhone').value = restaurantData.telefone || '';
+                document.getElementById('restaurantAddress').value = restaurantData.endereco || '';
+                
+                // Schedule
+                if (restaurantData.horario_funcionamento) {
+                    for (const [day, hours] of Object.entries(restaurantData.horario_funcionamento)) {
+                        const input = document.getElementById(`schedule_${day}`);
+                        if (input) input.value = hours || '';
+                    }
+                }
+                
+                // Delivery settings
+                if (restaurantData.delivery) {
+                    document.getElementById('deliveryFee').value = restaurantData.delivery.taxa_entrega || 0;
+                    document.getElementById('minOrder').value = restaurantData.delivery.pedido_minimo || 0;
+                    document.getElementById('minTime').value = restaurantData.delivery.tempo_minimo || 30;
+                    document.getElementById('maxTime').value = restaurantData.delivery.tempo_maximo || 50;
+                    document.getElementById('deliveryRadius').value = restaurantData.delivery.raio_km || 10;
+                    
+                    const deliveryToggle = document.getElementById('deliveryActive');
+                    if (restaurantData.delivery.ativo) {
+                        deliveryToggle.classList.add('active');
+                    } else {
+                        deliveryToggle.classList.remove('active');
+                    }
+                }
+                
+                // Payment methods
+                if (restaurantData.pagamento) {
+                    for (const [method, enabled] of Object.entries(restaurantData.pagamento)) {
+                        const checkbox = document.getElementById(`payment_${method}`);
+                        if (checkbox) checkbox.checked = enabled;
+                    }
+                }
+                
+                // Social media
+                if (restaurantData.redes_sociais) {
+                    document.getElementById('social_whatsapp').value = restaurantData.redes_sociais.whatsapp || '';
+                    document.getElementById('social_instagram').value = restaurantData.redes_sociais.instagram || '';
+                    document.getElementById('social_facebook').value = restaurantData.redes_sociais.facebook || '';
+                }
+                
+                showNotification('Configurações carregadas! 📋', 'success');
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showNotification('Erro ao carregar configurações', 'error');
+            }
+        }
+        
+        // Save settings
+        async function saveSettings() {
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            const originalHTML = saveBtn.innerHTML;
+            
+            // Mostrar estado de carregamento
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Salvando...</span>';
+            
+            // Coletar todos os dados do formulário
+            const updatedData = {
+                nome: document.getElementById('restaurantName').value,
+                telefone: document.getElementById('restaurantPhone').value,
+                endereco: document.getElementById('restaurantAddress').value,
+                horario_funcionamento: {
+                    segunda: document.getElementById('schedule_segunda').value,
+                    terca: document.getElementById('schedule_terca').value,
+                    quarta: document.getElementById('schedule_quarta').value,
+                    quinta: document.getElementById('schedule_quinta').value,
+                    sexta: document.getElementById('schedule_sexta').value,
+                    sabado: document.getElementById('schedule_sabado').value,
+                    domingo: document.getElementById('schedule_domingo').value
+                },
+                delivery: {
+                    ativo: document.getElementById('deliveryActive').classList.contains('active'),
+                    taxa_entrega: parseFloat(document.getElementById('deliveryFee').value) || 0,
+                    pedido_minimo: parseFloat(document.getElementById('minOrder').value) || 0,
+                    tempo_minimo: parseInt(document.getElementById('minTime').value) || 30,
+                    tempo_maximo: parseInt(document.getElementById('maxTime').value) || 50,
+                    raio_km: parseFloat(document.getElementById('deliveryRadius').value) || 10
+                },
+                pagamento: {
+                    dinheiro: document.getElementById('payment_dinheiro').checked,
+                    pix: document.getElementById('payment_pix').checked,
+                    cartao_credito: document.getElementById('payment_cartao_credito').checked,
+                    cartao_debito: document.getElementById('payment_cartao_debito').checked,
+                    vale_refeicao: document.getElementById('payment_vale_refeicao').checked
+                },
+                redes_sociais: {
+                    whatsapp: document.getElementById('social_whatsapp').value,
+                    instagram: document.getElementById('social_instagram').value,
+                    facebook: document.getElementById('social_facebook').value
+                }
+            };
+            
+            console.log('Salvando configurações:', updatedData);
+            
+            try {
+                const response = await fetch('/api/restaurant', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedData),
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Sucesso - mostrar ícone de check
+                    saveBtn.innerHTML = '<i class="fas fa-check"></i><span>Salvo com Sucesso!</span>';
+                    saveBtn.classList.remove('bg-purple-600');
+                    saveBtn.classList.add('bg-green-600');
+                    
+                    showNotification('Configurações salvas com sucesso! ✅');
+                    console.log('Configurações salvas:', result.data);
+                    
+                    // Restaurar botão após 3 segundos
+                    setTimeout(() => {
+                        saveBtn.innerHTML = originalHTML;
+                        saveBtn.disabled = false;
+                        saveBtn.classList.remove('bg-green-600');
+                        saveBtn.classList.add('bg-purple-600');
+                    }, 3000);
+                    
+                    // Recarregar dados para garantir sincronização
+                    setTimeout(() => loadSettings(), 500);
+                } else {
+                    throw new Error('Erro ao salvar');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                
+                // Erro - mostrar ícone de erro
+                saveBtn.innerHTML = '<i class="fas fa-times"></i><span>Erro ao Salvar</span>';
+                saveBtn.classList.remove('bg-purple-600');
+                saveBtn.classList.add('bg-red-600');
+                
+                showNotification('Erro ao salvar configurações', 'error');
+                
+                // Restaurar botão após 3 segundos
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalHTML;
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('bg-red-600');
+                    saveBtn.classList.add('bg-purple-600');
+                }, 3000);
+            }
+        }
+        
+        // Update order status
+        async function updateOrderStatus(event, orderId, newStatus) {
+            event.stopPropagation();
+            
+            try {
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+                
+                if (response.ok) {
+                    loadData();
+                    showNotification(`Pedido atualizado para: ${newStatus}`);
+                }
+            } catch (error) {
+                console.error('Error updating order:', error);
+                showNotification('Erro ao atualizar pedido', 'error');
+            }
+        }
+        
+        // Show order details
+        function showOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const orderDetails = document.getElementById('orderDetails');
+            orderDetails.innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Número do Pedido</p>
+                            <p class="font-semibold">#${order.id}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Data/Hora</p>
+                            <p class="font-semibold">${new Date(order.timestamp).toLocaleString('pt-BR')}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-500">Cliente</p>
+                        <p class="font-semibold">${order.cliente}</p>
+                        ${order.telefone ? `<p class="text-xs text-gray-600">${order.telefone}</p>` : ''}
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-500">Tipo de Entrega</p>
+                        <p class="font-semibold">${order.tipo_entrega === 'delivery' ? 'Entrega' : 'Retirada no Local'}</p>
+                    </div>
+                    
+                    ${order.endereco ? `
+                        <div>
+                            <p class="text-sm text-gray-500">Endereço de Entrega</p>
+                            <p class="font-semibold">${order.endereco}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <p class="text-sm text-gray-500">Forma de Pagamento</p>
+                        <p class="font-semibold">${order.forma_pagamento}</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Itens do Pedido</p>
+                        <div class="border rounded-lg p-3 space-y-2">
+                            ${order.items.map(item => `
+                                <div class="flex justify-between items-center">
+                                    <span>${item.quantidade}x ${item.nome}</span>
+                                    <span class="font-medium">R$ ${(item.preco_unitario * item.quantidade).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                            <div class="border-t pt-2 space-y-1">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span>Subtotal</span>
+                                    <span>R$ ${order.subtotal.toFixed(2)}</span>
+                                </div>
+                                ${order.taxa_entrega > 0 ? `
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span>Taxa de Entrega</span>
+                                        <span>R$ ${order.taxa_entrega.toFixed(2)}</span>
+                                    </div>
+                                ` : ''}
+                                <div class="flex justify-between items-center font-bold text-lg">
+                                    <span>Total</span>
+                                    <span>R$ ${order.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${order.observacoes ? `
+                        <div>
+                            <p class="text-sm text-gray-500">Observações</p>
+                            <p class="font-semibold">${order.observacoes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <p class="text-sm text-gray-500 mb-2">Status</p>
+                        <span class="status-badge status-${order.status}">${order.status}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('orderModal').classList.add('active');
+        }
+        
+        // Close order modal
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('active');
+        }
+        
+        // Toggle switch
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            
+            const icons = {
+                success: 'fas fa-check-circle text-green-500',
+                error: 'fas fa-exclamation-circle text-red-500',
+                warning: 'fas fa-exclamation-triangle text-yellow-500'
+            };
+            
+            notification.innerHTML = `
+                <i class="${icons[type] || icons.success}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Refresh data
+        function refreshData() {
+            loadData();
+            showNotification('Dados atualizados!');
+        }
+        
+        // Initialize with enhanced logging
+        console.log('🚀 Dashboard inicializado');
+        loadData();
+        setInterval(() => {
+            console.log('🔄 Atualizando dados...');
+            loadData();
+        }, 30000); // Auto-refresh every 30 seconds
+        
+        // Add debug button handler
+        async function debugFiles() {
+            try {
+                const response = await fetch('/api/debug/files');
+                const data = await response.json();
+                console.log('📁 Estado dos arquivos JSON:', data);
+                alert(`Debug Files:\n\nMenu: ${data.menu.items} items\nRestaurant: ${data.restaurant.name}\nOrders: ${data.orders.count} pedidos\n\nVerifique o console para mais detalhes.`);
+            } catch (error) {
+                console.error('Error debugging files:', error);
+            }
+        }
+        
+        // Add debug button to refresh button
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + D for debug
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                debugFiles();
+            }
+        });
+    </script>
+</body>
+</html>
